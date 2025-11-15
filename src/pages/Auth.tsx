@@ -23,8 +23,9 @@ const Auth = () => {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Only auto-redirect on login, not signup (signup handles its own redirect)
+      if (session && event === 'SIGNED_IN') {
         checkUserRoleAndRedirect(session.user.id);
       }
     });
@@ -88,13 +89,21 @@ const Auth = () => {
       if (data.user) {
         // Assign role based on email
         const role = signupData.email === "brototypewithfaru@gmail.com" ? "admin" : "user";
-        await supabase.from("user_roles").insert({
+        const { error: roleError } = await supabase.from("user_roles").insert({
           user_id: data.user.id,
           role: role
         });
 
+        if (roleError) {
+          console.error("Role assignment error:", roleError);
+        }
+
         toast.success("Account created successfully!");
-        await checkUserRoleAndRedirect(data.user.id);
+        
+        // Wait a bit for role to be committed, then redirect
+        setTimeout(() => {
+          checkUserRoleAndRedirect(data.user.id);
+        }, 500);
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to sign up");

@@ -40,7 +40,8 @@ const Chat = () => {
   useEffect(() => {
     if (selectedRoomId) {
       loadMessages(selectedRoomId);
-      subscribeToMessages(selectedRoomId);
+      const unsubscribe = subscribeToMessages(selectedRoomId);
+      return unsubscribe;
     }
   }, [selectedRoomId]);
 
@@ -64,15 +65,23 @@ const Chat = () => {
   const loadMessages = async (roomId: string) => {
     const { data } = await supabase
       .from("chat_messages")
-      .select(`
-        *,
-        profiles:sender_id (full_name)
-      `)
+      .select("*")
       .eq("room_id", roomId)
       .order("created_at", { ascending: true });
 
     if (data) {
-      setMessages(data as any);
+      const userIds = [...new Set(data.map(m => m.sender_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds);
+
+      const messagesWithProfiles = data.map(msg => ({
+        ...msg,
+        profiles: profiles?.find(p => p.id === msg.sender_id) || { full_name: "Unknown" }
+      }));
+
+      setMessages(messagesWithProfiles as any);
     }
   };
 
@@ -88,17 +97,23 @@ const Chat = () => {
           filter: `room_id=eq.${roomId}`,
         },
         async (payload) => {
-          const { data } = await supabase
+          const { data: newMsg } = await supabase
             .from("chat_messages")
-            .select(`
-              *,
-              profiles:sender_id (full_name)
-            `)
+            .select("*")
             .eq("id", payload.new.id)
             .single();
 
-          if (data) {
-            setMessages((prev) => [...prev, data as any]);
+          if (newMsg) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", newMsg.sender_id)
+              .single();
+
+            setMessages((prev) => [...prev, {
+              ...newMsg,
+              profiles: profile || { full_name: "Unknown" }
+            } as any]);
           }
         }
       )

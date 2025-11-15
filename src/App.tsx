@@ -15,6 +15,13 @@ import Chat from "./pages/user/Chat";
 import Profile from "./pages/user/Profile";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminOverview from "./pages/admin/Overview";
+import Users from "./pages/admin/Users";
+import Emergencies from "./pages/admin/Emergencies";
+import Complaints from "./pages/admin/Complaints";
+import RefreshmentTracking from "./pages/admin/RefreshmentTracking";
+import Contacts from "./pages/admin/Contacts";
+import CourseApplications from "./pages/admin/CourseApplications";
+import AdminChat from "./pages/admin/AdminChat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +46,13 @@ const App = () => (
           </Route>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminOverview />} />
+            <Route path="users" element={<Users />} />
+            <Route path="emergencies" element={<Emergencies />} />
+            <Route path="complaints" element={<Complaints />} />
+            <Route path="refreshment" element={<RefreshmentTracking />} />
+            <Route path="contacts" element={<Contacts />} />
+            <Route path="applications" element={<CourseApplications />} />
+            <Route path="chat" element={<AdminChat />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
