@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { UserSidebar } from "@/components/UserSidebar";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const UserLayout = () => {
   const navigate = useNavigate();
@@ -67,6 +68,7 @@ const UserLayout = () => {
             <div className="flex h-16 items-center justify-between px-4">
               <SidebarTrigger />
               <div className="flex items-center gap-4">
+                <NotificationBell />
                 <span className="text-sm text-muted-foreground">Hi, {userName}</span>
                 <Button variant="outline" onClick={handleLogout}>
                   Logout

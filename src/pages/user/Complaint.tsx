@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { FileUpload } from "@/components/FileUpload";
 
 interface Complaint {
   id: string;
@@ -32,7 +33,7 @@ const Complaint = () => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    file_url: "",
+    file_urls: [] as string[],
   });
 
   useEffect(() => {
@@ -61,7 +62,9 @@ const Complaint = () => {
 
     const { error } = await supabase.from("complaints").insert({
       user_id: user.id,
-      ...formData,
+      title: formData.title,
+      description: formData.description,
+      file_url: formData.file_urls[0] || null,
     });
 
     if (error) {
@@ -70,7 +73,7 @@ const Complaint = () => {
     }
 
     toast.success("Complaint submitted successfully");
-    setFormData({ title: "", description: "", file_url: "" });
+    setFormData({ title: "", description: "", file_urls: [] });
     setShowForm(false);
     loadComplaints();
   };
@@ -121,11 +124,11 @@ const Complaint = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="file">File URL (Optional)</Label>
-                <Input
-                  id="file"
-                  value={formData.file_url}
-                  onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
+                <Label>Attachments (Optional)</Label>
+                <FileUpload
+                  bucket="complaint-files"
+                  onUploadComplete={(urls) => setFormData({ ...formData, file_urls: urls })}
+                  existingFiles={formData.file_urls}
                 />
               </div>
               <Button type="submit">Submit Complaint</Button>

@@ -12,6 +12,7 @@ interface Message {
   message: string;
   sender_id: string;
   created_at: string;
+  read_by: string[] | null;
   profiles: {
     full_name: string | null;
     email: string;
@@ -30,7 +31,10 @@ const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [userId, setUserId] = useState<string>("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const presenceChannel = useRef<any>(null);
 
   useEffect(() => {
     initializeChat();
@@ -39,9 +43,14 @@ const Chat = () => {
   useEffect(() => {
     if (selectedRoom) {
       loadMessages(selectedRoom);
+      markMessagesAsRead(selectedRoom);
       const channel = subscribeToMessages(selectedRoom);
+      setupPresence(selectedRoom);
       return () => {
         supabase.removeChannel(channel);
+        if (presenceChannel.current) {
+          supabase.removeChannel(presenceChannel.current);
+        }
       };
     }
   }, [selectedRoom]);
@@ -126,11 +135,109 @@ const Chat = () => {
             ...newMsg,
             profiles: profile || { full_name: "Unknown", email: "" }
           }]);
+          
+          // Auto-mark as read when new message arrives
+          if (newMsg.sender_id !== userId) {
+            markMessageAsRead(newMsg.id);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `room_id=eq.${roomId}`
+        },
+        (payload) => {
+          const updatedMsg = payload.new as Message;
+          setMessages(prev =>
+            prev.map(msg => msg.id === updatedMsg.id ? { ...msg, read_by: updatedMsg.read_by } : msg)
+          );
         }
       )
       .subscribe();
 
     return channel;
+  };
+
+  const setupPresence = (roomId: string) => {
+    presenceChannel.current = supabase
+      .channel(`presence_${roomId}`)
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceChannel.current.presenceState();
+        const typingUserIds = Object.keys(state)
+          .filter(key => state[key][0]?.typing && state[key][0]?.user_id !== userId)
+          .map(key => state[key][0]?.user_id);
+        setTypingUsers(typingUserIds);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceChannel.current.track({
+            user_id: userId,
+            typing: false,
+          });
+        }
+      });
+  };
+
+  const handleTyping = async (value: string) => {
+    setNewMessage(value);
+    
+    if (presenceChannel.current && value.trim()) {
+      if (!isTyping) {
+        setIsTyping(true);
+        await presenceChannel.current.track({
+          user_id: userId,
+          typing: true,
+        });
+      }
+    } else if (presenceChannel.current && !value.trim() && isTyping) {
+      setIsTyping(false);
+      await presenceChannel.current.track({
+        user_id: userId,
+        typing: false,
+      });
+    }
+  };
+
+  const markMessagesAsRead = async (roomId: string) => {
+    const { data: unreadMessages } = await supabase
+      .from("chat_messages")
+      .select("id, read_by")
+      .eq("room_id", roomId)
+      .neq("sender_id", userId);
+
+    if (!unreadMessages) return;
+
+    for (const msg of unreadMessages) {
+      const readBy = msg.read_by || [];
+      if (!readBy.includes(userId)) {
+        await supabase
+          .from("chat_messages")
+          .update({ read_by: [...readBy, userId] })
+          .eq("id", msg.id);
+      }
+    }
+  };
+
+  const markMessageAsRead = async (messageId: string) => {
+    const { data: msg } = await supabase
+      .from("chat_messages")
+      .select("read_by")
+      .eq("id", messageId)
+      .single();
+
+    if (msg) {
+      const readBy = msg.read_by || [];
+      if (!readBy.includes(userId)) {
+        await supabase
+          .from("chat_messages")
+          .update({ read_by: [...readBy, userId] })
+          .eq("id", messageId);
+      }
+    }
   };
 
   const sendMessage = async (e: React.FormEvent) => {
@@ -141,6 +248,7 @@ const Chat = () => {
       room_id: selectedRoom,
       sender_id: userId,
       message: newMessage,
+      read_by: [userId],
     });
 
     if (error) {
@@ -149,6 +257,14 @@ const Chat = () => {
     }
 
     setNewMessage("");
+    
+    if (presenceChannel.current && isTyping) {
+      setIsTyping(false);
+      await presenceChannel.current.track({
+        user_id: userId,
+        typing: false,
+      });
+    }
   };
 
   const scrollToBottom = () => {
@@ -220,19 +336,31 @@ const Chat = () => {
                           {msg.profiles.full_name || msg.profiles.email}
                         </p>
                         <p>{msg.message}</p>
-                        <p className="text-xs opacity-70 mt-1">
-                          {new Date(msg.created_at).toLocaleTimeString()}
-                        </p>
+                        <div className="flex items-center justify-between mt-1">
+                          <p className="text-xs opacity-70">
+                            {new Date(msg.created_at).toLocaleTimeString()}
+                          </p>
+                          {msg.sender_id === userId && msg.read_by && msg.read_by.length > 1 && (
+                            <p className="text-xs opacity-70">✓✓ Read</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
+                  {typingUsers.length > 0 && (
+                    <div className="flex justify-start">
+                      <div className="bg-muted rounded-lg p-3">
+                        <p className="text-sm italic opacity-70">Someone is typing...</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
 
               <form onSubmit={sendMessage} className="flex gap-2 mt-4">
                 <Input
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={(e) => handleTyping(e.target.value)}
                   placeholder="Type a message..."
                   className="flex-1"
                 />
