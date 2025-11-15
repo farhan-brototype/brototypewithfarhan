@@ -14,12 +14,12 @@ const games = [
 ];
 
 const Refreshment = () => {
-  const [minutesUsed, setMinutesUsed] = useState(0);
+  const [secondsUsed, setSecondsUsed] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
 
-  const MAX_MINUTES = 30;
+  const MAX_SECONDS = 30 * 60; // 30 minutes in seconds
 
   useEffect(() => {
     loadUsage();
@@ -51,49 +51,54 @@ const Refreshment = () => {
       .select("minutes_used")
       .eq("user_id", user.id)
       .eq("date", today)
-      .single();
+      .maybeSingle();
 
-    setMinutesUsed(data?.minutes_used || 0);
+    setSecondsUsed((data?.minutes_used || 0) * 60);
   };
 
   const startGame = async (gameUrl: string) => {
-    const remainingMinutes = MAX_MINUTES - minutesUsed;
-    if (remainingMinutes <= 0) {
+    const remainingSeconds = MAX_SECONDS - secondsUsed;
+    if (remainingSeconds <= 0) {
       toast.error("Sorry, you have used this feature to its full limit today!");
       return;
     }
 
     setSelectedGame(gameUrl);
-    setTimeLeft(remainingMinutes * 60);
+    setTimeLeft(remainingSeconds);
     setIsPlaying(true);
   };
 
   const stopGame = async () => {
     if (!isPlaying) return;
 
-    const secondsUsed = (MAX_MINUTES - minutesUsed) * 60 - timeLeft;
-    const minutesToAdd = Math.ceil(secondsUsed / 60);
+    const actualSecondsUsed = (MAX_SECONDS - secondsUsed) - timeLeft;
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     const today = new Date().toISOString().split('T')[0];
+    const totalSecondsUsed = secondsUsed + actualSecondsUsed;
+    const minutesToStore = Math.ceil(totalSecondsUsed / 60);
+    
     const { error } = await supabase.from("refreshment_usage").upsert({
       user_id: user.id,
       date: today,
-      minutes_used: minutesUsed + minutesToAdd,
+      minutes_used: minutesToStore,
     }, {
       onConflict: "user_id,date"
     });
 
     if (!error) {
-      setMinutesUsed((prev) => prev + minutesToAdd);
+      setSecondsUsed(totalSecondsUsed);
     }
 
     setIsPlaying(false);
     setSelectedGame(null);
     setTimeLeft(0);
-    toast.success(`Game session ended. ${minutesToAdd} minute(s) used.`);
+    
+    const displayMinutes = Math.floor(actualSecondsUsed / 60);
+    const displaySeconds = actualSecondsUsed % 60;
+    toast.success(`Game session ended. ${displayMinutes}m ${displaySeconds}s used.`);
   };
 
   const formatTime = (seconds: number) => {
@@ -102,7 +107,7 @@ const Refreshment = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (minutesUsed >= MAX_MINUTES) {
+  if (secondsUsed >= MAX_SECONDS) {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Refreshment Zone</h1>
@@ -151,7 +156,7 @@ const Refreshment = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Refreshment Zone</h1>
         <div className="text-lg font-semibold">
-          Time Used Today: {minutesUsed} / {MAX_MINUTES} minutes
+          Time Used Today: {Math.floor(secondsUsed / 60)}m {secondsUsed % 60}s / 30 minutes
         </div>
       </div>
 
@@ -161,7 +166,7 @@ const Refreshment = () => {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            You have {MAX_MINUTES - minutesUsed} minutes of gaming time remaining today.
+            You have {Math.floor((MAX_SECONDS - secondsUsed) / 60)} minutes and {(MAX_SECONDS - secondsUsed) % 60} seconds of gaming time remaining today.
             Choose a game below to start playing!
           </p>
         </CardContent>
