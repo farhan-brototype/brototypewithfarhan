@@ -126,6 +126,15 @@ const Users = () => {
 
       if (error) throw error;
 
+      // Send notification to assigned user
+      await supabase.from("notifications").insert({
+        user_id: selectedUserId,
+        type: "assignment",
+        title: "New Assignment",
+        message: `You have been assigned: ${newAssignment.title}`,
+        link: "/assignment",
+      });
+
       toast.success("Assignment added successfully");
       setNewAssignment({ title: "", description: "", due_date: "" });
       setSelectedUserId("");

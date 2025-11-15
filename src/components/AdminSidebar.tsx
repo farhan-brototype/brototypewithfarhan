@@ -1,4 +1,4 @@
-import { Home, Users, FileText, AlertCircle, Phone, Gamepad2, MessageSquare, Contact, BookOpen } from "lucide-react";
+import { Home, Users, FileText, AlertCircle, Phone, Gamepad2, MessageSquare, Contact, BookOpen, CheckSquare } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -15,6 +15,7 @@ import logo from "@/assets/brototype-logo.svg";
 const items = [
   { title: "Overview", url: "/admin", icon: Home },
   { title: "Users", url: "/admin/users", icon: Users },
+  { title: "Submissions", url: "/admin/submissions", icon: CheckSquare },
   { title: "Emergencies", url: "/admin/emergencies", icon: AlertCircle },
   { title: "Complaints", url: "/admin/complaints", icon: FileText },
   { title: "Refreshment", url: "/admin/refreshment", icon: Gamepad2 },
