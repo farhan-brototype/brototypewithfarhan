@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -57,9 +58,12 @@ const AdminLayout = () => {
           <div className="border-b">
             <div className="flex h-16 items-center justify-between px-4">
               <SidebarTrigger />
-              <Button variant="outline" onClick={handleLogout}>
-                Logout
-              </Button>
+              <div className="flex items-center gap-4">
+                <NotificationBell />
+                <Button variant="outline" onClick={handleLogout}>
+                  Logout
+                </Button>
+              </div>
             </div>
           </div>
           <div className="p-6">

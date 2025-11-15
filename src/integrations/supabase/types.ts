@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignment_submissions: {
+        Row: {
+          assignment_id: string
+          comments: string | null
+          created_at: string | null
+          file_urls: string[] | null
+          id: string
+          status: string
+          submitted_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          assignment_id: string
+          comments?: string | null
+          created_at?: string | null
+          file_urls?: string[] | null
+          id?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string
+          comments?: string | null
+          created_at?: string | null
+          file_urls?: string[] | null
+          id?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignments: {
         Row: {
           assigned_by: string | null
@@ -52,6 +96,7 @@ export type Database = {
           created_at: string | null
           id: string
           message: string
+          read_by: string[] | null
           room_id: string
           sender_id: string
         }
@@ -59,6 +104,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           message: string
+          read_by?: string[] | null
           room_id: string
           sender_id: string
         }
@@ -66,6 +112,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           message?: string
+          read_by?: string[] | null
           room_id?: string
           sender_id?: string
         }
@@ -210,6 +257,39 @@ export type Database = {
           created_at?: string | null
           description?: string
           id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          link: string | null
+          message: string
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          link?: string | null
+          message: string
+          read?: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          link?: string | null
+          message?: string
+          read?: boolean | null
+          title?: string
+          type?: string
           user_id?: string
         }
         Relationships: []
