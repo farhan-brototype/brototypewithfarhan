@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Trash2, UserPlus } from "lucide-react";
+import { Trash2, UserPlus, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 interface User {
   id: string;
@@ -20,6 +22,13 @@ const Users = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [newUser, setNewUser] = useState({ email: "", password: "", full_name: "" });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [newAssignment, setNewAssignment] = useState({
+    title: "",
+    description: "",
+    due_date: ""
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -96,6 +105,36 @@ const Users = () => {
     }
   };
 
+  const handleAddAssignment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedUserId) {
+      toast.error("Please select a user");
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase.from("assignments").insert({
+        assigned_to: selectedUserId,
+        assigned_by: user?.id,
+        title: newAssignment.title,
+        description: newAssignment.description,
+        due_date: newAssignment.due_date
+      });
+
+      if (error) throw error;
+
+      toast.success("Assignment added successfully");
+      setNewAssignment({ title: "", description: "", due_date: "" });
+      setSelectedUserId("");
+      setIsAssignmentDialogOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add assignment");
+    }
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -104,7 +143,67 @@ const Users = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">User Management</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <div className="flex gap-2">
+          <Dialog open={isAssignmentDialogOpen} onOpenChange={setIsAssignmentDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Assignment
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Assignment</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleAddAssignment} className="space-y-4">
+                <div>
+                  <Label htmlFor="user_select">Assign To</Label>
+                  <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a user" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users.filter(u => u.role === "user").map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.full_name || user.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={newAssignment.title}
+                    onChange={(e) => setNewAssignment({ ...newAssignment, title: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={newAssignment.description}
+                    onChange={(e) => setNewAssignment({ ...newAssignment, description: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="due_date">Due Date</Label>
+                  <Input
+                    id="due_date"
+                    type="date"
+                    value={newAssignment.due_date}
+                    onChange={(e) => setNewAssignment({ ...newAssignment, due_date: e.target.value })}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full">Add Assignment</Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <UserPlus className="mr-2 h-4 w-4" />
@@ -149,6 +248,7 @@ const Users = () => {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <Card>
