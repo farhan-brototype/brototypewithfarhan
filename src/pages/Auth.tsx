@@ -86,14 +86,15 @@ const Auth = () => {
       if (error) throw error;
 
       if (data.user) {
-        // Assign user role by default
+        // Assign role based on email
+        const role = signupData.email === "brototypewithfaru@gmail.com" ? "admin" : "user";
         await supabase.from("user_roles").insert({
           user_id: data.user.id,
-          role: "user"
+          role: role
         });
 
         toast.success("Account created successfully!");
-        navigate("/dashboard");
+        await checkUserRoleAndRedirect(data.user.id);
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to sign up");
