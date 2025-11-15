@@ -14,13 +14,12 @@ import logo from "@/assets/brototype-logo.svg";
 
 const items = [
   { title: "Overview", url: "/admin", icon: Home },
-  { title: "User List", url: "/admin/users", icon: Users },
-  { title: "Assignments", url: "/admin/assignments", icon: FileText },
-  { title: "Complaints", url: "/admin/complaints", icon: AlertCircle },
-  { title: "Emergency", url: "/admin/emergency", icon: Phone },
+  { title: "Users", url: "/admin/users", icon: Users },
+  { title: "Emergencies", url: "/admin/emergencies", icon: AlertCircle },
+  { title: "Complaints", url: "/admin/complaints", icon: FileText },
   { title: "Refreshment", url: "/admin/refreshment", icon: Gamepad2 },
   { title: "Contacts", url: "/admin/contacts", icon: Contact },
-  { title: "Course Updates", url: "/admin/course-updates", icon: BookOpen },
+  { title: "Applications", url: "/admin/applications", icon: BookOpen },
   { title: "Chat", url: "/admin/chat", icon: MessageSquare },
 ];
 
