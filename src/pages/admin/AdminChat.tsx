@@ -24,12 +24,19 @@ interface ChatRoom {
   type: string;
 }
 
+interface UserProfile {
+  id: string;
+  full_name: string | null;
+  email: string;
+}
+
 const AdminChat = () => {
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [userId, setUserId] = useState<string>("");
+  const [userProfiles, setUserProfiles] = useState<Map<string, UserProfile>>(new Map());
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -66,9 +73,29 @@ const AdminChat = () => {
       .order("created_at");
 
     if (data) {
-      setRooms(data);
-      if (data.length > 0) {
-        setSelectedRoom(data[0].id);
+      // Filter out "all_users" room for admin
+      const adminRooms = data.filter(room => room.type !== "all_users");
+      
+      // Load user profiles for user_admin rooms
+      const userIds = adminRooms
+        .filter(room => room.type === "user_admin")
+        .map(room => room.name.replace("user_admin_", ""));
+      
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", userIds);
+        
+        if (profiles) {
+          const profilesMap = new Map(profiles.map(p => [p.id, p]));
+          setUserProfiles(profilesMap);
+        }
+      }
+      
+      setRooms(adminRooms);
+      if (adminRooms.length > 0) {
+        setSelectedRoom(adminRooms[0].id);
       }
     }
   };
@@ -154,10 +181,13 @@ const AdminChat = () => {
 
   const getRoomDisplayName = (room: ChatRoom) => {
     if (room.type === "admin_all_users") return "Announcements to All Users";
-    if (room.type === "all_users") return "All Users Chat";
     if (room.type === "user_admin") {
       const userId = room.name.replace("user_admin_", "");
-      return `Chat with User (${userId.substring(0, 8)}...)`;
+      const profile = userProfiles.get(userId);
+      if (profile?.full_name) {
+        return `Chat with ${profile.full_name}`;
+      }
+      return `Chat with ${profile?.email || "User"}`;
     }
     return room.name;
   };
