@@ -38,7 +38,7 @@ const Auth = () => {
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
-      .single();
+      .maybeSingle();
 
     if (roleData?.role === "admin") {
       navigate("/admin");

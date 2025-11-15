@@ -26,9 +26,9 @@ const AdminLayout = () => {
       .from("user_roles")
       .select("role")
       .eq("user_id", session.user.id)
-      .single();
+      .maybeSingle();
 
-    if (!roleData || roleData.role !== "admin") {
+    if (roleData?.role !== "admin") {
       navigate("/dashboard");
       return;
     }
