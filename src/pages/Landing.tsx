@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import logo from "@/assets/brototype-logo.svg";
+import logo from "@/assets/brototype-logo.png";
 import { Users, TrendingUp, Target, ArrowRight, Code2, Laptop } from "lucide-react";
 
 const Landing = () => {
@@ -109,7 +109,7 @@ const Landing = () => {
       {/* Header */}
       <header className="border-b border-gray-800 backdrop-blur-sm sticky top-0 z-50 bg-black/80">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src={logo} alt="Brototype" className="h-12 brightness-0 invert" />
+          <img src={logo} alt="Brototype" className="h-12" />
           <Button onClick={() => navigate("/auth")} className="bg-primary hover:bg-primary/90">
             Sign In
           </Button>

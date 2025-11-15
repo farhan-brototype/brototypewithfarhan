@@ -10,7 +10,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import logo from "@/assets/brototype-logo.svg";
+import logo from "@/assets/brototype-logo.png";
 
 const items = [
   { title: "Profile", url: "/dashboard/profile", icon: User },

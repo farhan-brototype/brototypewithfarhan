@@ -7,6 +7,10 @@ import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FileIcon, Download } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 interface Submission {
   id: string;
@@ -16,6 +20,10 @@ interface Submission {
   comments: string | null;
   file_urls: string[] | null;
   submitted_at: string;
+  grade: number | null;
+  admin_feedback: string | null;
+  graded_at: string | null;
+  graded_by: string | null;
   assignments: {
     title: string;
     description: string;
@@ -27,6 +35,14 @@ interface Submission {
   };
 }
 
+interface GradeHistory {
+  id: string;
+  grade: number;
+  feedback: string | null;
+  graded_at: string;
+  graded_by: string;
+}
+
 const Submissions = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [filteredSubmissions, setFilteredSubmissions] = useState<Submission[]>([]);
@@ -34,6 +50,10 @@ const Submissions = () => {
   const [filterUser, setFilterUser] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [users, setUsers] = useState<Array<{ id: string; name: string }>>([]);
+  const [grade, setGrade] = useState<string>("");
+  const [feedback, setFeedback] = useState<string>("");
+  const [gradeHistory, setGradeHistory] = useState<GradeHistory[]>([]);
+  const [isGrading, setIsGrading] = useState(false);
 
   useEffect(() => {
     loadSubmissions();
@@ -101,6 +121,74 @@ const Submissions = () => {
 
     setFilteredSubmissions(filtered);
   };
+
+  const loadGradeHistory = async (submissionId: string) => {
+    const { data } = await supabase
+      .from("grade_history")
+      .select("*")
+      .eq("submission_id", submissionId)
+      .order("graded_at", { ascending: false });
+
+    if (data) {
+      setGradeHistory(data);
+    }
+  };
+
+  const handleGrade = async (status: 'approved' | 'rejected') => {
+    if (!selectedSubmission) return;
+    
+    const gradeValue = parseInt(grade);
+    if (isNaN(gradeValue) || gradeValue < 0 || gradeValue > 100) {
+      toast.error("Please enter a valid grade between 0 and 100");
+      return;
+    }
+
+    setIsGrading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase
+        .from("assignment_submissions")
+        .update({
+          status,
+          grade: gradeValue,
+          admin_feedback: feedback,
+          graded_at: new Date().toISOString(),
+          graded_by: user?.id
+        })
+        .eq("id", selectedSubmission.id);
+
+      if (error) throw error;
+
+      toast.success(`Submission ${status === 'approved' ? 'approved' : 'rejected'} successfully`);
+      setSelectedSubmission(null);
+      setGrade("");
+      setFeedback("");
+      loadSubmissions();
+    } catch (error) {
+      toast.error("Failed to grade submission");
+      console.error(error);
+    } finally {
+      setIsGrading(false);
+    }
+  };
+
+  const handleDialogOpen = (open: boolean) => {
+    if (!open) {
+      setSelectedSubmission(null);
+      setGrade("");
+      setFeedback("");
+      setGradeHistory([]);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedSubmission) {
+      setGrade(selectedSubmission.grade?.toString() || "");
+      setFeedback(selectedSubmission.admin_feedback || "");
+      loadGradeHistory(selectedSubmission.id);
+    }
+  }, [selectedSubmission]);
 
   return (
     <div className="space-y-6">
@@ -177,8 +265,8 @@ const Submissions = () => {
         </Card>
       )}
 
-      <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={!!selectedSubmission} onOpenChange={handleDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedSubmission?.assignments.title}</DialogTitle>
           </DialogHeader>
@@ -213,7 +301,7 @@ const Submissions = () => {
 
               {selectedSubmission.comments && (
                 <div>
-                  <h4 className="font-semibold mb-2">Comments</h4>
+                  <h4 className="font-semibold mb-2">Student Comments</h4>
                   <p className="text-sm text-muted-foreground">{selectedSubmission.comments}</p>
                 </div>
               )}
@@ -243,6 +331,90 @@ const Submissions = () => {
                         </div>
                       );
                     })}
+                  </div>
+                </div>
+              )}
+
+              <div className="border-t pt-4 space-y-4">
+                <h4 className="font-semibold">Grade Submission</h4>
+                
+                <div>
+                  <Label htmlFor="grade">Grade (0-100)</Label>
+                  <Input
+                    id="grade"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={grade}
+                    onChange={(e) => setGrade(e.target.value)}
+                    placeholder="Enter grade"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="feedback">Admin Feedback</Label>
+                  <Textarea
+                    id="feedback"
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="Provide feedback to the student..."
+                    rows={4}
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleGrade('approved')}
+                    disabled={isGrading || !grade}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    onClick={() => handleGrade('rejected')}
+                    disabled={isGrading || !grade}
+                    variant="destructive"
+                    className="flex-1"
+                  >
+                    Reject
+                  </Button>
+                </div>
+              </div>
+
+              {selectedSubmission.grade !== null && (
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-2">Current Grade</h4>
+                  <div className="bg-muted p-3 rounded-lg">
+                    <p className="text-2xl font-bold">{selectedSubmission.grade}/100</p>
+                    {selectedSubmission.admin_feedback && (
+                      <p className="text-sm mt-2">{selectedSubmission.admin_feedback}</p>
+                    )}
+                    {selectedSubmission.graded_at && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Graded: {format(new Date(selectedSubmission.graded_at), "PPP 'at' p")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {gradeHistory.length > 0 && (
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-2">Grade History</h4>
+                  <div className="space-y-2">
+                    {gradeHistory.map((history) => (
+                      <div key={history.id} className="bg-muted p-3 rounded-lg text-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-lg">{history.grade}/100</span>
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(history.graded_at), "PPP 'at' p")}
+                          </span>
+                        </div>
+                        {history.feedback && (
+                          <p className="mt-2 text-muted-foreground">{history.feedback}</p>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

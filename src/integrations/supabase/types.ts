@@ -16,10 +16,14 @@ export type Database = {
     Tables: {
       assignment_submissions: {
         Row: {
+          admin_feedback: string | null
           assignment_id: string
           comments: string | null
           created_at: string | null
           file_urls: string[] | null
+          grade: number | null
+          graded_at: string | null
+          graded_by: string | null
           id: string
           status: string
           submitted_at: string | null
@@ -27,10 +31,14 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_feedback?: string | null
           assignment_id: string
           comments?: string | null
           created_at?: string | null
           file_urls?: string[] | null
+          grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
           id?: string
           status?: string
           submitted_at?: string | null
@@ -38,10 +46,14 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_feedback?: string | null
           assignment_id?: string
           comments?: string | null
           created_at?: string | null
           file_urls?: string[] | null
+          grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
           id?: string
           status?: string
           submitted_at?: string | null
@@ -260,6 +272,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      grade_history: {
+        Row: {
+          created_at: string | null
+          feedback: string | null
+          grade: number
+          graded_at: string | null
+          graded_by: string
+          id: string
+          submission_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          feedback?: string | null
+          grade: number
+          graded_at?: string | null
+          graded_by: string
+          id?: string
+          submission_id: string
+        }
+        Update: {
+          created_at?: string | null
+          feedback?: string | null
+          grade?: number
+          graded_at?: string | null
+          graded_by?: string
+          id?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grade_history_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "assignment_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
