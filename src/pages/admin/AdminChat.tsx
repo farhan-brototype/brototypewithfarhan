@@ -153,9 +153,11 @@ const AdminChat = () => {
   };
 
   const getRoomDisplayName = (room: ChatRoom) => {
-    if (room.type === "admin_all_users") return "Admin & All Users";
+    if (room.type === "admin_all_users") return "Announcements to All Users";
+    if (room.type === "all_users") return "All Users Chat";
     if (room.type === "user_admin") {
-      return room.name.replace("admin_", "Chat with User: ");
+      const userId = room.name.replace("user_admin_", "");
+      return `Chat with User (${userId.substring(0, 8)}...)`;
     }
     return room.name;
   };
