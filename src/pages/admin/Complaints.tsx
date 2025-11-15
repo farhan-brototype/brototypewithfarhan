@@ -61,12 +61,24 @@ const Complaints = () => {
 
   const handleStatusChange = async (complaintId: string, newStatus: "submitted" | "in_progress" | "under_review" | "resolved") => {
     try {
+      const complaint = complaints.find(c => c.id === complaintId);
+      if (!complaint) return;
+
       const { error } = await supabase
         .from("complaints")
         .update({ status: newStatus })
         .eq("id", complaintId);
 
       if (error) throw error;
+
+      // Send notification to user
+      await supabase.from("notifications").insert({
+        user_id: complaint.user_id,
+        type: "complaint",
+        title: "Complaint Status Updated",
+        message: `Your complaint "${complaint.title}" status has been updated to ${newStatus.replace("_", " ")}`,
+        link: "/dashboard/complaint",
+      });
 
       setComplaints(complaints.map(c => 
         c.id === complaintId ? { ...c, status: newStatus } : c
