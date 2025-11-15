@@ -25,15 +25,10 @@ const UserLayout = () => {
       .from("user_roles")
       .select("role")
       .eq("user_id", session.user.id)
-      .single();
+      .maybeSingle();
 
     if (roleData?.role === "admin") {
       navigate("/admin");
-      return;
-    }
-
-    if (!roleData || roleData.role !== "user") {
-      navigate("/auth");
       return;
     }
 
