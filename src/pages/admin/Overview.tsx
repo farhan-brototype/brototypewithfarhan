@@ -20,7 +20,7 @@ const AdminOverview = () => {
     const today = new Date().toISOString().split('T')[0];
 
     const [users, assignments, complaints, emergencies, refreshment] = await Promise.all([
-      supabase.from("user_roles").select("id", { count: "exact" }).eq("role", "user"),
+      supabase.from("profiles").select("id", { count: "exact" }),
       supabase.from("assignments").select("id", { count: "exact" }).gte("created_at", today),
       supabase.from("complaints").select("id", { count: "exact" }).gte("created_at", today),
       supabase.from("emergencies").select("id", { count: "exact" }).gte("created_at", today),
