@@ -82,16 +82,34 @@ $$;
 --
 
 CREATE FUNCTION public.update_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
     AS $$
 BEGIN
-  NEW.updated_at = NOW();
+  NEW.updated_at = now();
   RETURN NEW;
 END;
 $$;
 
 
 SET default_table_access_method = heap;
+
+--
+-- Name: assignment_submissions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.assignment_submissions (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    assignment_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    status text DEFAULT 'submitted'::text NOT NULL,
+    comments text,
+    file_urls text[],
+    submitted_at timestamp with time zone DEFAULT now(),
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
 
 --
 -- Name: assignments; Type: TABLE; Schema: public; Owner: -
@@ -118,7 +136,8 @@ CREATE TABLE public.chat_messages (
     room_id uuid NOT NULL,
     sender_id uuid NOT NULL,
     message text NOT NULL,
-    created_at timestamp with time zone DEFAULT now()
+    created_at timestamp with time zone DEFAULT now(),
+    read_by uuid[]
 );
 
 
@@ -193,6 +212,22 @@ CREATE TABLE public.emergencies (
 
 
 --
+-- Name: notifications; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notifications (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid NOT NULL,
+    type text NOT NULL,
+    title text NOT NULL,
+    message text NOT NULL,
+    link text,
+    read boolean DEFAULT false,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
 -- Name: profiles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -229,6 +264,14 @@ CREATE TABLE public.user_roles (
     role public.app_role NOT NULL,
     created_at timestamp with time zone DEFAULT now()
 );
+
+
+--
+-- Name: assignment_submissions assignment_submissions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assignment_submissions
+    ADD CONSTRAINT assignment_submissions_pkey PRIMARY KEY (id);
 
 
 --
@@ -288,6 +331,14 @@ ALTER TABLE ONLY public.emergencies
 
 
 --
+-- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notifications
+    ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: profiles profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -328,6 +379,13 @@ ALTER TABLE ONLY public.user_roles
 
 
 --
+-- Name: assignment_submissions update_assignment_submissions_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_assignment_submissions_updated_at BEFORE UPDATE ON public.assignment_submissions FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+
+--
 -- Name: assignments update_assignments_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -353,6 +411,14 @@ CREATE TRIGGER update_contacts_updated_at BEFORE UPDATE ON public.contacts FOR E
 --
 
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+
+--
+-- Name: assignment_submissions assignment_submissions_assignment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assignment_submissions
+    ADD CONSTRAINT assignment_submissions_assignment_id_fkey FOREIGN KEY (assignment_id) REFERENCES public.assignments(id) ON DELETE CASCADE;
 
 
 --
@@ -428,6 +494,13 @@ ALTER TABLE ONLY public.user_roles
 
 
 --
+-- Name: notifications Admins can create notifications; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can create notifications" ON public.notifications FOR INSERT WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
 -- Name: complaints Admins can manage all complaints; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -439,6 +512,13 @@ CREATE POLICY "Admins can manage all complaints" ON public.complaints USING (pub
 --
 
 CREATE POLICY "Admins can manage all roles" ON public.user_roles USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: assignment_submissions Admins can manage all submissions; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can manage all submissions" ON public.assignment_submissions USING (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 
 --
@@ -505,6 +585,13 @@ CREATE POLICY "Users can create own complaints" ON public.complaints FOR INSERT 
 
 
 --
+-- Name: assignment_submissions Users can create own submissions; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can create own submissions" ON public.assignment_submissions FOR INSERT WITH CHECK ((auth.uid() = user_id));
+
+
+--
 -- Name: profiles Users can insert own profile; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -533,10 +620,24 @@ CREATE POLICY "Users can update own complaints" ON public.complaints FOR UPDATE 
 
 
 --
+-- Name: notifications Users can update own notifications; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can update own notifications" ON public.notifications FOR UPDATE USING ((auth.uid() = user_id));
+
+
+--
 -- Name: profiles Users can update own profile; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING ((auth.uid() = id));
+
+
+--
+-- Name: assignment_submissions Users can update own submissions; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can update own submissions" ON public.assignment_submissions FOR UPDATE USING ((auth.uid() = user_id));
 
 
 --
@@ -582,10 +683,24 @@ CREATE POLICY "Users can view own emergencies" ON public.emergencies FOR SELECT 
 
 
 --
+-- Name: notifications Users can view own notifications; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can view own notifications" ON public.notifications FOR SELECT USING ((auth.uid() = user_id));
+
+
+--
 -- Name: user_roles Users can view own roles; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Users can view own roles" ON public.user_roles FOR SELECT USING ((auth.uid() = user_id));
+
+
+--
+-- Name: assignment_submissions Users can view own submissions; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can view own submissions" ON public.assignment_submissions FOR SELECT USING (((auth.uid() = user_id) OR public.has_role(auth.uid(), 'admin'::public.app_role)));
 
 
 --
@@ -594,6 +709,12 @@ CREATE POLICY "Users can view own roles" ON public.user_roles FOR SELECT USING (
 
 CREATE POLICY "Users can view own usage" ON public.refreshment_usage FOR SELECT USING (((auth.uid() = user_id) OR public.has_role(auth.uid(), 'admin'::public.app_role)));
 
+
+--
+-- Name: assignment_submissions; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.assignment_submissions ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: assignments; Type: ROW SECURITY; Schema: public; Owner: -
@@ -636,6 +757,12 @@ ALTER TABLE public.course_applications ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.emergencies ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: notifications; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: profiles; Type: ROW SECURITY; Schema: public; Owner: -
