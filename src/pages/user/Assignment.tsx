@@ -26,6 +26,8 @@ interface Submission {
   comments: string | null;
   file_urls: string[] | null;
   submitted_at: string;
+  grade: number | null;
+  admin_feedback: string | null;
 }
 
 const Assignment = () => {
@@ -217,14 +219,50 @@ const Assignment = () => {
                   <CheckCircle className="h-5 w-5 text-green-500" />
                   Submission Status
                 </h4>
-                <div className="space-y-2">
+                <div className="space-y-3">
+                  <div>
+                    <span className="font-medium">Status:</span>{" "}
+                    <Badge 
+                      variant={
+                        submissions[selectedAssignment.id].status === 'approved' ? 'default' :
+                        submissions[selectedAssignment.id].status === 'rejected' ? 'destructive' :
+                        'secondary'
+                      }
+                      className={
+                        submissions[selectedAssignment.id].status === 'approved' ? 'bg-green-600' :
+                        submissions[selectedAssignment.id].status === 'rejected' ? 'bg-red-600' :
+                        'bg-yellow-600'
+                      }
+                    >
+                      {submissions[selectedAssignment.id].status}
+                    </Badge>
+                  </div>
                   <p className="text-sm">
                     <span className="font-medium">Submitted:</span>{" "}
                     {format(new Date(submissions[selectedAssignment.id].submitted_at), "PPP 'at' p")}
                   </p>
+                  
+                  {submissions[selectedAssignment.id].grade !== null && (
+                    <div className="bg-muted p-4 rounded-lg">
+                      <h5 className="font-semibold mb-2">Grade</h5>
+                      <p className="text-2xl font-bold">
+                        {submissions[selectedAssignment.id].grade}/100
+                      </p>
+                    </div>
+                  )}
+                  
+                  {submissions[selectedAssignment.id].admin_feedback && (
+                    <div className="bg-muted p-4 rounded-lg">
+                      <h5 className="font-semibold mb-2">Instructor Feedback</h5>
+                      <p className="text-sm text-muted-foreground">
+                        {submissions[selectedAssignment.id].admin_feedback}
+                      </p>
+                    </div>
+                  )}
+                  
                   {submissions[selectedAssignment.id].comments && (
                     <div>
-                      <span className="font-medium">Comments:</span>
+                      <span className="font-medium">Your Comments:</span>
                       <p className="text-sm text-muted-foreground mt-1">
                         {submissions[selectedAssignment.id].comments}
                       </p>
