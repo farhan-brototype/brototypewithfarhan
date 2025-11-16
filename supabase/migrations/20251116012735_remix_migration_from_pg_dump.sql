@@ -4,7 +4,7 @@
 
 
 -- Dumped from database version 17.6
--- Dumped by pg_dump version 17.6
+-- Dumped by pg_dump version 17.7
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -47,6 +47,21 @@ CREATE TYPE public.complaint_status AS ENUM (
 
 
 --
+-- Name: create_notification(uuid, text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.create_notification(p_user_id uuid, p_title text, p_message text, p_type text, p_link text DEFAULT NULL::text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  INSERT INTO notifications (user_id, title, message, type, link)
+  VALUES (p_user_id, p_title, p_message, p_type, p_link);
+END;
+$$;
+
+
+--
 -- Name: handle_new_user(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -74,6 +89,113 @@ CREATE FUNCTION public.has_role(_user_id uuid, _role public.app_role) RETURNS bo
     SELECT 1 FROM public.user_roles
     WHERE user_id = _user_id AND role = _role
   )
+$$;
+
+
+--
+-- Name: notify_assignment_created(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notify_assignment_created() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.assigned_to IS NOT NULL THEN
+    PERFORM create_notification(
+      NEW.assigned_to,
+      'New Assignment',
+      'You have been assigned: ' || NEW.title,
+      'assignment',
+      '/dashboard/assignment'
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: notify_complaint_status_change(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notify_complaint_status_change() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.status != OLD.status THEN
+    PERFORM create_notification(
+      NEW.user_id,
+      'Complaint Status Updated',
+      'Your complaint status has been changed to: ' || NEW.status,
+      'complaint',
+      '/dashboard/complaint'
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: notify_emergency_created(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notify_emergency_created() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  -- Notify all admins
+  INSERT INTO notifications (user_id, title, message, type, link)
+  SELECT ur.user_id, 'Emergency Alert', 'A new emergency has been reported', 'emergency', '/admin/emergencies'
+  FROM user_roles ur
+  WHERE ur.role = 'admin';
+  
+  RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: notify_grade_posted(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notify_grade_posted() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.grade IS NOT NULL AND OLD.grade IS NULL THEN
+    PERFORM create_notification(
+      NEW.user_id,
+      'Assignment Graded',
+      'Your assignment has been graded',
+      'grade',
+      '/dashboard/assignment'
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: track_grade_change(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.track_grade_change() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF (TG_OP = 'UPDATE' AND NEW.grade IS NOT NULL AND OLD.grade IS DISTINCT FROM NEW.grade) THEN
+    INSERT INTO grade_history (submission_id, grade, feedback, graded_by)
+    VALUES (NEW.id, NEW.grade, NEW.admin_feedback, NEW.graded_by);
+  END IF;
+  RETURN NEW;
+END;
 $$;
 
 
@@ -107,7 +229,11 @@ CREATE TABLE public.assignment_submissions (
     file_urls text[],
     submitted_at timestamp with time zone DEFAULT now(),
     created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+    updated_at timestamp with time zone DEFAULT now(),
+    grade integer,
+    admin_feedback text,
+    graded_at timestamp with time zone,
+    graded_by uuid
 );
 
 
@@ -207,6 +333,21 @@ CREATE TABLE public.emergencies (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     user_id uuid NOT NULL,
     description text NOT NULL,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: grade_history; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.grade_history (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    submission_id uuid NOT NULL,
+    grade integer NOT NULL,
+    feedback text,
+    graded_by uuid NOT NULL,
+    graded_at timestamp with time zone DEFAULT now(),
     created_at timestamp with time zone DEFAULT now()
 );
 
@@ -331,6 +472,14 @@ ALTER TABLE ONLY public.emergencies
 
 
 --
+-- Name: grade_history grade_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grade_history
+    ADD CONSTRAINT grade_history_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -376,6 +525,41 @@ ALTER TABLE ONLY public.user_roles
 
 ALTER TABLE ONLY public.user_roles
     ADD CONSTRAINT user_roles_user_id_role_key UNIQUE (user_id, role);
+
+
+--
+-- Name: assignments on_assignment_created; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER on_assignment_created AFTER INSERT ON public.assignments FOR EACH ROW EXECUTE FUNCTION public.notify_assignment_created();
+
+
+--
+-- Name: complaints on_complaint_status_change; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER on_complaint_status_change AFTER UPDATE ON public.complaints FOR EACH ROW EXECUTE FUNCTION public.notify_complaint_status_change();
+
+
+--
+-- Name: emergencies on_emergency_created; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER on_emergency_created AFTER INSERT ON public.emergencies FOR EACH ROW EXECUTE FUNCTION public.notify_emergency_created();
+
+
+--
+-- Name: assignment_submissions on_grade_posted; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER on_grade_posted AFTER UPDATE ON public.assignment_submissions FOR EACH ROW EXECUTE FUNCTION public.notify_grade_posted();
+
+
+--
+-- Name: assignment_submissions track_grade_change_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER track_grade_change_trigger AFTER UPDATE ON public.assignment_submissions FOR EACH ROW EXECUTE FUNCTION public.track_grade_change();
 
 
 --
@@ -470,6 +654,14 @@ ALTER TABLE ONLY public.emergencies
 
 
 --
+-- Name: grade_history grade_history_submission_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grade_history
+    ADD CONSTRAINT grade_history_submission_id_fkey FOREIGN KEY (submission_id) REFERENCES public.assignment_submissions(id) ON DELETE CASCADE;
+
+
+--
 -- Name: profiles profiles_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -498,6 +690,13 @@ ALTER TABLE ONLY public.user_roles
 --
 
 CREATE POLICY "Admins can create notifications" ON public.notifications FOR INSERT WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: grade_history Admins can insert grade history; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can insert grade history" ON public.grade_history FOR INSERT WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 
 --
@@ -609,7 +808,7 @@ CREATE POLICY "Users can manage own usage" ON public.refreshment_usage USING ((a
 -- Name: chat_messages Users can send messages; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "Users can send messages" ON public.chat_messages FOR INSERT WITH CHECK ((auth.uid() = sender_id));
+CREATE POLICY "Users can send messages" ON public.chat_messages FOR INSERT TO authenticated WITH CHECK ((auth.uid() = sender_id));
 
 
 --
@@ -641,6 +840,13 @@ CREATE POLICY "Users can update own submissions" ON public.assignment_submission
 
 
 --
+-- Name: chat_messages Users can update read status; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can update read status" ON public.chat_messages FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+
+
+--
 -- Name: profiles Users can view all profiles; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -655,10 +861,10 @@ CREATE POLICY "Users can view chat rooms" ON public.chat_rooms FOR SELECT USING 
 
 
 --
--- Name: chat_messages Users can view messages in their rooms; Type: POLICY; Schema: public; Owner: -
+-- Name: chat_messages Users can view messages; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "Users can view messages in their rooms" ON public.chat_messages FOR SELECT USING (true);
+CREATE POLICY "Users can view messages" ON public.chat_messages FOR SELECT TO authenticated USING (true);
 
 
 --
@@ -711,6 +917,15 @@ CREATE POLICY "Users can view own usage" ON public.refreshment_usage FOR SELECT 
 
 
 --
+-- Name: grade_history Users can view their own grade history; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can view their own grade history" ON public.grade_history FOR SELECT USING (((EXISTS ( SELECT 1
+   FROM public.assignment_submissions
+  WHERE ((assignment_submissions.id = grade_history.submission_id) AND (assignment_submissions.user_id = auth.uid())))) OR public.has_role(auth.uid(), 'admin'::public.app_role)));
+
+
+--
 -- Name: assignment_submissions; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -757,6 +972,12 @@ ALTER TABLE public.course_applications ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.emergencies ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: grade_history; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.grade_history ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: notifications; Type: ROW SECURITY; Schema: public; Owner: -
