@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface FileUploadProps {
-  bucket: "assignment-files" | "complaint-files";
+  bucket: "assignments" | "complaints";
   onUploadComplete: (urls: string[]) => void;
   existingFiles?: string[];
   maxFiles?: number;

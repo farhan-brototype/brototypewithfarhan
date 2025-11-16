@@ -163,7 +163,7 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string
-          file_url: string | null
+          file_urls: string[] | null
           id: string
           status: Database["public"]["Enums"]["complaint_status"] | null
           title: string
@@ -173,7 +173,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           description: string
-          file_url?: string | null
+          file_urls?: string[] | null
           id?: string
           status?: Database["public"]["Enums"]["complaint_status"] | null
           title: string
@@ -183,7 +183,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           description?: string
-          file_url?: string | null
+          file_urls?: string[] | null
           id?: string
           status?: Database["public"]["Enums"]["complaint_status"] | null
           title?: string
