@@ -23,8 +23,8 @@ import Contacts from "./pages/admin/Contacts";
 import CourseApplications from "./pages/admin/CourseApplications";
 import AdminChat from "./pages/admin/AdminChat";
 import NotFound from "./pages/NotFound";
-
 import Submissions from "./pages/admin/Submissions";
+import Assignments from "./pages/admin/Assignments";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +49,7 @@ const App = () => (
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminOverview />} />
             <Route path="users" element={<Users />} />
+            <Route path="assignments" element={<Assignments />} />
             <Route path="submissions" element={<Submissions />} />
             <Route path="emergencies" element={<Emergencies />} />
             <Route path="complaints" element={<Complaints />} />

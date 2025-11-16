@@ -1,4 +1,4 @@
-import { Home, Users, FileText, AlertCircle, Phone, Gamepad2, MessageSquare, Contact, BookOpen, CheckSquare } from "lucide-react";
+import { Home, Users, FileText, AlertCircle, Phone, Gamepad2, MessageSquare, Contact, BookOpen, CheckSquare, BookMarked } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -15,6 +15,7 @@ import logo from "@/assets/logo-main.png";
 const items = [
   { title: "Overview", url: "/admin", icon: Home },
   { title: "Users", url: "/admin/users", icon: Users },
+  { title: "Assignments", url: "/admin/assignments", icon: BookMarked },
   { title: "Submissions", url: "/admin/submissions", icon: CheckSquare },
   { title: "Emergencies", url: "/admin/emergencies", icon: AlertCircle },
   { title: "Complaints", url: "/admin/complaints", icon: FileText },
