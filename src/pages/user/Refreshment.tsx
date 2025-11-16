@@ -5,12 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const games = [
-  { name: "Subway Surfers", url: "https://poki.com/en/g/subway-surfers" },
   { name: "Sudoku", url: "https://sudoku.com/" },
-  { name: "Tic Tac Toe", url: "https://playtictactoe.org/" },
-  { name: "Chess", url: "https://www.chess.com/play/computer" },
-  { name: "Puzzle", url: "https://www.jigsawplanet.com/" },
-  { name: "Matching Cards", url: "https://www.memozor.com/" },
 ];
 
 const Refreshment = () => {

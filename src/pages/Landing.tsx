@@ -272,11 +272,11 @@ const Landing = () => {
                   <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="Select your background" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="it">IT Background</SelectItem>
-                    <SelectItem value="non-it">Non-IT Background</SelectItem>
-                    <SelectItem value="student">Current Student</SelectItem>
-                    <SelectItem value="professional">Working Professional</SelectItem>
+                  <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                    <SelectItem value="it" className="text-white">IT Background</SelectItem>
+                    <SelectItem value="non-it" className="text-white">Non-IT Background</SelectItem>
+                    <SelectItem value="student" className="text-white">Current Student</SelectItem>
+                    <SelectItem value="professional" className="text-white">Working Professional</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
