@@ -270,7 +270,7 @@ const Assignment = () => {
                   <div>
                     <Label>Upload Files (Optional)</Label>
                     <FileUpload
-                      bucket="assignment-files"
+                      bucket="assignments"
                       onUploadComplete={(urls) =>
                         setSubmissionForm({ ...submissionForm, file_urls: urls })
                       }

@@ -12,7 +12,7 @@ interface Complaint {
   description: string;
   status: string;
   created_at: string;
-  file_url: string | null;
+  file_urls: string[] | null;
   user_id: string;
   profiles: {
     full_name: string | null;
@@ -126,10 +126,21 @@ const Complaints = () => {
                         {complaint.profiles?.full_name || "Unknown"} ({complaint.profiles?.email})
                       </p>
                       <p className="text-sm mt-2">{complaint.description}</p>
-                      {complaint.file_url && (
-                        <a href={complaint.file_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
-                          View Attachment
-                        </a>
+                      {complaint.file_urls && complaint.file_urls.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-sm font-medium">Attachments:</p>
+                          {complaint.file_urls.map((url, idx) => (
+                            <a 
+                              key={idx}
+                              href={url} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-sm text-primary hover:underline block"
+                            >
+                              Attachment {idx + 1}
+                            </a>
+                          ))}
+                        </div>
                       )}
                     </div>
                     <div className="flex flex-col gap-2 items-end">

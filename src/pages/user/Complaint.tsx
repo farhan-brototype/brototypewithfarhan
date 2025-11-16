@@ -17,7 +17,7 @@ interface Complaint {
   description: string;
   status: string;
   created_at: string;
-  file_url?: string;
+  file_urls?: string[];
 }
 
 const statusColors: Record<string, string> = {
@@ -64,7 +64,7 @@ const Complaint = () => {
       user_id: user.id,
       title: formData.title,
       description: formData.description,
-      file_url: formData.file_urls[0] || null,
+      file_urls: formData.file_urls,
     });
 
     if (error) {
@@ -126,7 +126,7 @@ const Complaint = () => {
               <div>
                 <Label>Attachments (Optional)</Label>
                 <FileUpload
-                  bucket="complaint-files"
+                  bucket="complaints"
                   onUploadComplete={(urls) => setFormData({ ...formData, file_urls: urls })}
                   existingFiles={formData.file_urls}
                 />
@@ -154,6 +154,22 @@ const Complaint = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">{complaint.description}</p>
+                {complaint.file_urls && complaint.file_urls.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-sm font-medium mb-1">Attachments:</p>
+                    {complaint.file_urls.map((url, idx) => (
+                      <a
+                        key={idx}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline text-sm block"
+                      >
+                        Attachment {idx + 1}
+                      </a>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
