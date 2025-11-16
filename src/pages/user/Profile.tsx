@@ -98,16 +98,17 @@ const Profile = () => {
       .from("profiles")
       .update({
         full_name: profile.full_name,
-        avatar_url: profile.avatar_url,
       })
       .eq("id", user.id);
 
     if (error) {
+      console.error("Update error:", error);
       toast.error("Failed to update profile");
       return;
     }
 
     toast.success("Profile updated successfully");
+    loadProfile(); // Reload to confirm update
   };
 
   const changePassword = async (e: React.FormEvent) => {
