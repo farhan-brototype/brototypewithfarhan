@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import logo from "@/assets/logo-main.png";
-import { Users, TrendingUp, Target, ArrowRight, Code2, Laptop } from "lucide-react";
+import { ArrowRight, Laptop } from "lucide-react";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -117,104 +117,35 @@ const Landing = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 text-center relative">
+      <section className="container mx-auto px-4 py-32 text-center relative min-h-[70vh] flex flex-col items-center justify-center">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-orange-500/10 to-primary/10 blur-3xl -z-10" />
         
         <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-orange-500 to-primary bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-4 duration-1000">
-          THE BROTHER YOU NEVER HAD
+          Want to Dive Into Your Dashboard?
         </h1>
         
         <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-12 animate-in fade-in slide-in-from-bottom-5 duration-1000 delay-200">
-          If you know how to read and write in English and have the basic knowledge to do addition,
-          subtraction, multiplication and division; congratulations you too can become a software engineer.
+          Access your personalized learning dashboard, track assignments, and manage your progress
         </p>
 
         <Button
           size="lg"
-          className="bg-primary hover:bg-primary/90 text-white mb-20 animate-in fade-in duration-1000 delay-300"
-          onClick={() => document.getElementById('apply')?.scrollIntoView({ behavior: 'smooth' })}
+          className="bg-primary hover:bg-primary/90 text-white animate-in fade-in duration-1000 delay-300 mb-12"
+          onClick={() => navigate("/auth")}
         >
-          Apply Now <ArrowRight className="ml-2 h-5 w-5" />
+          Sign In to Dashboard <ArrowRight className="ml-2 h-5 w-5" />
         </Button>
-        
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-12">
-          <Card className="bg-gray-900 border-gray-800 hover:border-primary/50 transition-all hover:scale-105">
-            <CardContent className="pt-6 text-center">
-              <Users className="h-8 w-8 mx-auto mb-2 text-primary" />
-              <div className="text-3xl font-bold text-white">2254</div>
-              <div className="text-sm text-gray-400">Students Placed</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gray-900 border-gray-800 hover:border-primary/50 transition-all hover:scale-105">
-            <CardContent className="pt-6 text-center">
-              <TrendingUp className="h-8 w-8 mx-auto mb-2 text-primary" />
-              <div className="text-3xl font-bold text-white">₹40K</div>
-              <div className="text-sm text-gray-400">Avg Salary/mo</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gray-900 border-gray-800 hover:border-primary/50 transition-all hover:scale-105">
-            <CardContent className="pt-6 text-center">
-              <Target className="h-8 w-8 mx-auto mb-2 text-primary" />
-              <div className="text-3xl font-bold text-white">100%</div>
-              <div className="text-sm text-gray-400">Placement</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gray-900 border-gray-800 hover:border-primary/50 transition-all hover:scale-105">
-            <CardContent className="pt-6 text-center">
-              <Code2 className="h-8 w-8 mx-auto mb-2 text-primary" />
-              <div className="text-3xl font-bold text-white">6+</div>
-              <div className="text-sm text-gray-400">Tech Stacks</div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="container mx-auto px-4 py-20 bg-gradient-to-b from-transparent to-gray-900/50">
-        <h2 className="text-4xl font-bold text-center mb-12 text-white">
-          Why Choose <span className="text-primary">Brototype?</span>
-        </h2>
-        
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          <Card className="bg-gray-900 border-gray-800 hover:border-primary/50 transition-all">
-            <CardHeader>
-              <CardTitle className="text-white">No Upfront Fees</CardTitle>
-              <CardDescription className="text-gray-400">
-                Pay only after you get placed
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-gray-300">
-              We believe in your potential. Start learning today and pay us only when you land your dream job.
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-900 border-gray-800 hover:border-primary/50 transition-all">
-            <CardHeader>
-              <CardTitle className="text-white">Industry Ready</CardTitle>
-              <CardDescription className="text-gray-400">
-                Learn from real-world projects
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-gray-300">
-              Our curriculum is designed by industry experts to make you job-ready from day one.
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-900 border-gray-800 hover:border-primary/50 transition-all">
-            <CardHeader>
-              <CardTitle className="text-white">Lifetime Support</CardTitle>
-              <CardDescription className="text-gray-400">
-                We're your brothers for life
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-gray-300">
-              Get continuous support even after placement. We're here for your entire career journey.
-            </CardContent>
-          </Card>
+        <div className="mt-8">
+          <p className="text-gray-400 mb-4">New to Brototype?</p>
+          <Button
+            size="lg"
+            variant="outline"
+            className="border-primary text-primary hover:bg-primary/10"
+            onClick={() => document.getElementById('apply')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            Apply for Brocamp <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
         </div>
       </section>
 

@@ -157,9 +157,22 @@ const Assignment = () => {
                   <CardTitle className="text-lg">{assignment.title}</CardTitle>
                   <div className="flex flex-col gap-1">
                     {submission ? (
-                      <Badge variant="default" className="bg-green-500">
+                      <Badge 
+                        variant={
+                          submission.status === 'approved' ? 'default' :
+                          submission.status === 'rejected' ? 'destructive' :
+                          'secondary'
+                        }
+                        className={
+                          submission.status === 'approved' ? 'bg-green-600 hover:bg-green-700' :
+                          submission.status === 'rejected' ? 'bg-red-600 hover:bg-red-700' :
+                          'bg-yellow-600 hover:bg-yellow-700'
+                        }
+                      >
                         <CheckCircle className="h-3 w-3 mr-1" />
-                        Submitted
+                        {submission.status === 'approved' ? 'Approved' :
+                         submission.status === 'rejected' ? 'Rejected' :
+                         'Submitted'}
                       </Badge>
                     ) : (
                       <>
