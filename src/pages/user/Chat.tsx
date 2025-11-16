@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Send, MessageSquare } from "lucide-react";
+import { Send, MessageSquare, Check, CheckCheck } from "lucide-react";
 
 interface Message {
   id: string;
@@ -35,6 +35,7 @@ const Chat = () => {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const presenceChannel = useRef<any>(null);
+  const typingTimeout = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     initializeChat();
@@ -75,6 +76,7 @@ const Chat = () => {
 
     if (!allRooms) return;
 
+    // For regular users: show "Admin All Users", "All Users", and their private admin room
     const userRooms = allRooms.filter(room => 
       room.type === "admin_all_users" || 
       room.type === "all_users" || 

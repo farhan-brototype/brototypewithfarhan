@@ -10,7 +10,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import logo from "@/assets/brototype-logo.png";
+import logo from "@/assets/logo-main.png";
 
 const items = [
   { title: "Overview", url: "/admin", icon: Home },
