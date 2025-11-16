@@ -25,10 +25,10 @@ interface ChatRoom {
   type: string;
 }
 
-interface UserProfile {
+interface ChatRoom {
   id: string;
-  full_name: string | null;
-  email: string;
+  name: string;
+  type: string;
 }
 
 const AdminChat = () => {
@@ -37,7 +37,6 @@ const AdminChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [userId, setUserId] = useState<string>("");
-  const [userProfiles, setUserProfiles] = useState<Map<string, UserProfile>>(new Map());
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -82,25 +81,9 @@ const AdminChat = () => {
       .order("created_at");
 
     if (data) {
-      // Filter out "all_users" room for admin
+      // Admin sees: "Admin All Users" and all individual "user_admin" rooms
+      // Filter out "all_users" room (that's only for users)
       const adminRooms = data.filter(room => room.type !== "all_users");
-      
-      // Load user profiles for user_admin rooms
-      const userIds = adminRooms
-        .filter(room => room.type === "user_admin")
-        .map(room => room.name.replace("user_admin_", ""));
-      
-      if (userIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, full_name, email")
-          .in("id", userIds);
-        
-        if (profiles) {
-          const profilesMap = new Map(profiles.map(p => [p.id, p]));
-          setUserProfiles(profilesMap);
-        }
-      }
       
       setRooms(adminRooms);
       if (adminRooms.length > 0) {
@@ -297,12 +280,8 @@ const AdminChat = () => {
   const getRoomDisplayName = (room: ChatRoom) => {
     if (room.type === "admin_all_users") return "Announcements to All Users";
     if (room.type === "user_admin") {
-      const userId = room.name.replace("user_admin_", "");
-      const profile = userProfiles.get(userId);
-      if (profile?.full_name) {
-        return `Chat with ${profile.full_name}`;
-      }
-      return `Chat with ${profile?.email || "User"}`;
+      // Room name is already "Admin - User Name", just return it
+      return room.name;
     }
     return room.name;
   };

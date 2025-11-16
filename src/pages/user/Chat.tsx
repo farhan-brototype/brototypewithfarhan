@@ -76,12 +76,26 @@ const Chat = () => {
 
     if (!allRooms) return;
 
+    // Get user's profile to match their admin room
+    const { data: userProfile } = await supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", currentUserId)
+      .single();
+
     // For regular users: show "Admin All Users", "All Users", and their private admin room
-    const userRooms = allRooms.filter(room => 
-      room.type === "admin_all_users" || 
-      room.type === "all_users" || 
-      (room.type === "user_admin" && room.name.includes(currentUserId))
-    );
+    const userRooms = allRooms.filter(room => {
+      if (room.type === "admin_all_users" || room.type === "all_users") {
+        return true;
+      }
+      if (room.type === "user_admin") {
+        // Match by name (Admin - Full Name or Admin - Email)
+        const matchName = userProfile?.full_name && room.name.includes(userProfile.full_name);
+        const matchEmail = room.name.includes(userProfile?.email || "");
+        return matchName || matchEmail;
+      }
+      return false;
+    });
 
     setRooms(userRooms);
     if (userRooms.length > 0) {
@@ -276,9 +290,12 @@ const Chat = () => {
   };
 
   const getRoomDisplayName = (room: ChatRoom) => {
-    if (room.type === "admin_all_users") return "Admin Announcements";
-    if (room.type === "all_users") return "All Users Chat";
-    if (room.type === "user_admin") return "Chat with Admin";
+    if (room.type === "admin_all_users") return "Announcements (Admin)";
+    if (room.type === "all_users") return "All Users";
+    if (room.type === "user_admin") {
+      // Room name is already formatted nicely
+      return room.name;
+    }
     return room.name;
   };
 
