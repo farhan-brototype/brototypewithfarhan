@@ -89,7 +89,16 @@ const Submissions = () => {
       .select("id, full_name, email");
 
     if (data) {
-      setUsers(data.map(u => ({ id: u.id, name: u.full_name || u.email })));
+      // Filter out admins from the user list
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+      
+      const adminIds = new Set(adminRoles?.map(r => r.user_id) || []);
+      const nonAdminUsers = data.filter(u => !adminIds.has(u.id));
+      
+      setUsers(nonAdminUsers.map(u => ({ id: u.id, name: u.full_name || u.email })));
     }
   };
 
