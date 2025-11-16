@@ -119,7 +119,7 @@ const AdminChat = () => {
 
   const subscribeToMessages = (roomId: string) => {
     const channel = supabase
-      .channel(`admin_chat_room_${roomId}`)
+      .channel(`admin_chat_room_${roomId}_${Date.now()}`)
       .on(
         'postgres_changes',
         {
@@ -129,6 +129,7 @@ const AdminChat = () => {
           filter: `room_id=eq.${roomId}`
         },
         async (payload) => {
+          console.log('Admin - New message received:', payload);
           const newMsg = payload.new as Message;
           const { data: profile } = await supabase
             .from("profiles")
@@ -155,13 +156,16 @@ const AdminChat = () => {
           filter: `room_id=eq.${roomId}`
         },
         (payload) => {
+          console.log('Admin - Message updated:', payload);
           const updatedMsg = payload.new as Message;
           setMessages(prev =>
             prev.map(msg => msg.id === updatedMsg.id ? { ...msg, read_by: updatedMsg.read_by } : msg)
           );
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Admin - Subscription status:', status);
+      });
 
     return channel;
   };
