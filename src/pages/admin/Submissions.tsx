@@ -270,7 +270,20 @@ const Submissions = () => {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <CardTitle className="text-lg">{submission.assignments.title}</CardTitle>
-                <Badge variant="default">{submission.status}</Badge>
+                <Badge 
+                  variant={
+                    submission.status === 'approved' ? 'default' :
+                    submission.status === 'rejected' ? 'destructive' :
+                    'secondary'
+                  }
+                  className={
+                    submission.status === 'approved' ? 'bg-green-600 hover:bg-green-700' :
+                    submission.status === 'rejected' ? 'bg-red-600 hover:bg-red-700' :
+                    'bg-yellow-600 hover:bg-yellow-700'
+                  }
+                >
+                  {submission.status}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent>
