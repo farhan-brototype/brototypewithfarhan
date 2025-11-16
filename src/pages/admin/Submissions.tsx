@@ -103,14 +103,17 @@ const Submissions = () => {
   };
 
   const loadSubmissions = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("assignment_submissions")
       .select(`
         *,
-        assignments (title, description, due_date),
-        profiles (full_name, email)
+        assignments!inner (title, description, due_date),
+        profiles!inner (full_name, email)
       `)
       .order("submitted_at", { ascending: false });
+
+    console.log("Submissions data:", data);
+    console.log("Submissions error:", error);
 
     if (data) {
       setSubmissions(data as any);
