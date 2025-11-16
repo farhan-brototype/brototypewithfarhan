@@ -103,20 +103,41 @@ const Submissions = () => {
   };
 
   const loadSubmissions = async () => {
-    const { data, error } = await supabase
+    const { data: submissionsData, error } = await supabase
       .from("assignment_submissions")
-      .select(`
-        *,
-        assignments!inner (title, description, due_date),
-        profiles!inner (full_name, email)
-      `)
+      .select("*")
       .order("submitted_at", { ascending: false });
 
-    console.log("Submissions data:", data);
-    console.log("Submissions error:", error);
+    if (error) {
+      console.error("Submissions error:", error);
+      return;
+    }
 
-    if (data) {
-      setSubmissions(data as any);
+    if (submissionsData && submissionsData.length > 0) {
+      // Fetch related assignments
+      const assignmentIds = [...new Set(submissionsData.map(s => s.assignment_id))];
+      const { data: assignmentsData } = await supabase
+        .from("assignments")
+        .select("id, title, description, due_date")
+        .in("id", assignmentIds);
+
+      // Fetch related profiles
+      const userIds = [...new Set(submissionsData.map(s => s.user_id))];
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", userIds);
+
+      // Map the data
+      const enrichedSubmissions = submissionsData.map(submission => ({
+        ...submission,
+        assignments: assignmentsData?.find(a => a.id === submission.assignment_id) || { title: "", description: "", due_date: "" },
+        profiles: profilesData?.find(p => p.id === submission.user_id) || { full_name: null, email: "" }
+      }));
+
+      setSubmissions(enrichedSubmissions as any);
+    } else {
+      setSubmissions([]);
     }
   };
 
