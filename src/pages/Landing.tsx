@@ -109,7 +109,7 @@ const Landing = () => {
       {/* Header */}
       <header className="border-b border-gray-800 backdrop-blur-sm sticky top-0 z-50 bg-black/80">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src={logo} alt="Brototype" className="h-12" />
+          <img src={logo} alt="Brototype" className="h-10" />
           <Button onClick={() => navigate("/auth")} className="bg-primary hover:bg-primary/90">
             Sign In
           </Button>
@@ -125,7 +125,7 @@ const Landing = () => {
         </h1>
         
         <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-12 animate-in fade-in slide-in-from-bottom-5 duration-1000 delay-200">
-          Access your personalized learning dashboard, track assignments, and manage your progress
+          Access your personalized Brototype dashboard, track assignments, and manage your progress
         </p>
 
         <Button
