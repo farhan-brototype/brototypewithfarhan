@@ -166,7 +166,8 @@ const Assignment = () => {
                         className={
                           submission.status === 'approved' ? 'bg-green-600 hover:bg-green-700' :
                           submission.status === 'rejected' ? 'bg-red-600 hover:bg-red-700' :
-                          'bg-yellow-600 hover:bg-yellow-700'
+                          daysUntilDue < 0 ? 'bg-red-600 hover:bg-red-700' :
+                          'bg-green-600 hover:bg-green-700'
                         }
                       >
                         <CheckCircle className="h-3 w-3 mr-1" />
