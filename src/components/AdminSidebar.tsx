@@ -26,7 +26,13 @@ const items = [
 ];
 
 export function AdminSidebar() {
-  const { open } = useSidebar();
+  const { open, setOpen } = useSidebar();
+
+  const handleNavClick = () => {
+    if (window.innerWidth < 768) {
+      setOpen(false);
+    }
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -40,7 +46,7 @@ export function AdminSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end={item.url === "/admin"}>
+                    <NavLink to={item.url} end={item.url === "/admin"} onClick={handleNavClick}>
                       <item.icon />
                       <span>{item.title}</span>
                     </NavLink>
