@@ -1,4 +1,4 @@
-import { Home, Users, FileText, AlertCircle, Phone, Gamepad2, MessageSquare, Contact, BookOpen, CheckSquare, BookMarked } from "lucide-react";
+import { Home, Users, FileText, AlertCircle, Phone, Gamepad2, MessageSquare, Contact, BookOpen, CheckSquare, BookMarked, Bot } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -23,6 +23,7 @@ const items = [
   { title: "Contacts", url: "/admin/contacts", icon: Contact },
   { title: "Applications", url: "/admin/applications", icon: BookOpen },
   { title: "Chat", url: "/admin/chat", icon: MessageSquare },
+  { title: "AI Assistant", url: "/admin/ai-chat", icon: Bot },
 ];
 
 export function AdminSidebar() {
