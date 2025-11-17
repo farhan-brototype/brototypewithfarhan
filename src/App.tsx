@@ -12,6 +12,7 @@ import Complaint from "./pages/user/Complaint";
 import Emergency from "./pages/user/Emergency";
 import Refreshment from "./pages/user/Refreshment";
 import Chat from "./pages/user/Chat";
+import AIChat from "./pages/user/AIChat";
 import Profile from "./pages/user/Profile";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminOverview from "./pages/admin/Overview";
@@ -22,6 +23,7 @@ import RefreshmentTracking from "./pages/admin/RefreshmentTracking";
 import Contacts from "./pages/admin/Contacts";
 import CourseApplications from "./pages/admin/CourseApplications";
 import AdminChat from "./pages/admin/AdminChat";
+import AdminAIChat from "./pages/admin/AdminAIChat";
 import NotFound from "./pages/NotFound";
 import Submissions from "./pages/admin/Submissions";
 import Assignments from "./pages/admin/Assignments";
@@ -44,6 +46,7 @@ const App = () => (
             <Route path="emergency" element={<Emergency />} />
             <Route path="refreshment" element={<Refreshment />} />
             <Route path="chat" element={<Chat />} />
+            <Route path="ai-chat" element={<AIChat />} />
             <Route path="profile" element={<Profile />} />
           </Route>
           <Route path="/admin" element={<AdminLayout />}>
@@ -57,6 +60,7 @@ const App = () => (
             <Route path="contacts" element={<Contacts />} />
             <Route path="applications" element={<CourseApplications />} />
             <Route path="chat" element={<AdminChat />} />
+            <Route path="ai-chat" element={<AdminAIChat />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
