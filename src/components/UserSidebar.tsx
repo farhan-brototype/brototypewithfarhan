@@ -23,7 +23,13 @@ const items = [
 ];
 
 export function UserSidebar() {
-  const { open } = useSidebar();
+  const { open, setOpen } = useSidebar();
+
+  const handleNavClick = () => {
+    if (window.innerWidth < 768) {
+      setOpen(false);
+    }
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -37,7 +43,7 @@ export function UserSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end={item.url === "/dashboard"}>
+                    <NavLink to={item.url} end={item.url === "/dashboard"} onClick={handleNavClick}>
                       <item.icon />
                       <span>{item.title}</span>
                     </NavLink>

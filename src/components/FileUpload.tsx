@@ -84,8 +84,23 @@ export const FileUpload = ({
     onUploadComplete(newFiles);
   };
 
-  const downloadFile = (fileUrl: string) => {
-    window.open(fileUrl, '_blank');
+  const downloadFile = async (fileUrl: string) => {
+    try {
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileUrl.split('/').pop() || 'download';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback to opening in new tab
+      window.open(fileUrl, '_blank');
+    }
   };
 
   return (
