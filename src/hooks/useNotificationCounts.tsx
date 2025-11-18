@@ -15,6 +15,7 @@ export const useNotificationCounts = () => {
     complaint: 0,
     emergency: 0,
     grade: 0,
+    application: 0,
   });
 
   const loadCounts = async () => {
@@ -33,6 +34,7 @@ export const useNotificationCounts = () => {
         complaint: 0,
         emergency: 0,
         grade: 0,
+        application: 0,
       };
 
       data.forEach((notification) => {
@@ -43,6 +45,20 @@ export const useNotificationCounts = () => {
 
       setCounts(newCounts);
     }
+  };
+
+  const markAsRead = async (type: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("user_id", user.id)
+      .eq("type", type)
+      .eq("read", false);
+
+    await loadCounts();
   };
 
   useEffect(() => {
@@ -68,5 +84,5 @@ export const useNotificationCounts = () => {
     };
   }, []);
 
-  return counts;
+  return { counts, markAsRead };
 };

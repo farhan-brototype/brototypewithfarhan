@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Phone, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useNotificationCounts } from "@/hooks/useNotificationCounts";
 
 interface Emergency {
   id: string;
@@ -18,11 +19,13 @@ const Emergency = () => {
   const [emergencies, setEmergencies] = useState<Emergency[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [description, setDescription] = useState("");
+  const { markAsRead } = useNotificationCounts();
 
   const adminPhone = "9037133475";
 
   useEffect(() => {
     loadEmergencies();
+    markAsRead("emergency");
   }, []);
 
   const loadEmergencies = async () => {

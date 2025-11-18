@@ -39,6 +39,24 @@ const Landing = () => {
 
       if (error) throw error;
 
+      // Create notifications for all admins
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+
+      if (adminRoles) {
+        const notifications = adminRoles.map(admin => ({
+          user_id: admin.user_id,
+          type: "application",
+          title: "New Course Application",
+          message: `New application from ${formData.full_name}`,
+          link: "/admin/applications"
+        }));
+
+        await supabase.from("notifications").insert(notifications);
+      }
+
       toast.success("Application submitted successfully!");
       setFormData({
         full_name: "",
