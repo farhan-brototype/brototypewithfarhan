@@ -10,7 +10,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo-main.png";
+import { useNotificationCounts } from "@/hooks/useNotificationCounts";
 
 const items = [
   { title: "Profile", url: "/dashboard/profile", icon: User },
@@ -25,11 +27,17 @@ const items = [
 
 export function UserSidebar() {
   const { open, setOpen } = useSidebar();
+  const notificationCounts = useNotificationCounts();
 
   const handleNavClick = () => {
-    if (window.innerWidth < 768) {
-      setOpen(false);
-    }
+    setOpen(false);
+  };
+
+  const getNotificationCount = (url: string) => {
+    if (url.includes("assignment")) return notificationCounts.assignment;
+    if (url.includes("complaint")) return notificationCounts.complaint;
+    if (url.includes("emergency")) return notificationCounts.emergency;
+    return 0;
   };
 
   return (
@@ -41,16 +49,24 @@ export function UserSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end={item.url === "/dashboard"} onClick={handleNavClick}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) => {
+                const count = getNotificationCount(item.url);
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink to={item.url} end={item.url === "/dashboard"} onClick={handleNavClick}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                        {count > 0 && (
+                          <Badge variant="destructive" className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs">
+                            {count}
+                          </Badge>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
