@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Plus, Calendar, User } from "lucide-react";
+import { FileUpload } from "@/components/FileUpload";
 
 interface Assignment {
   id: string;
@@ -38,7 +39,8 @@ const Assignments = () => {
     title: "",
     description: "",
     due_date: "",
-    assigned_to: ""
+    assigned_to: "",
+    file_urls: [] as string[]
   });
 
   useEffect(() => {
@@ -141,13 +143,14 @@ const Assignments = () => {
         assigned_by: user?.id,
         title: newAssignment.title,
         description: newAssignment.description,
-        due_date: newAssignment.due_date
+        due_date: newAssignment.due_date,
+        file_urls: newAssignment.file_urls.length > 0 ? newAssignment.file_urls : null
       });
 
       if (error) throw error;
 
       toast.success("Assignment created successfully");
-      setNewAssignment({ title: "", description: "", due_date: "", assigned_to: "" });
+      setNewAssignment({ title: "", description: "", due_date: "", assigned_to: "", file_urls: [] });
       setIsDialogOpen(false);
       loadAssignments();
     } catch (error: any) {
@@ -214,6 +217,16 @@ const Assignments = () => {
                   type="date"
                   value={newAssignment.due_date}
                   onChange={(e) => setNewAssignment({ ...newAssignment, due_date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Files (Optional)</Label>
+                <FileUpload
+                  bucket="assignments"
+                  onUploadComplete={(urls) => {
+                    setNewAssignment({ ...newAssignment, file_urls: urls });
+                  }}
+                  existingFiles={newAssignment.file_urls}
                 />
               </div>
               <Button type="submit" className="w-full">Create Assignment</Button>

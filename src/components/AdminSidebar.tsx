@@ -10,7 +10,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo-main.png";
+import { useNotificationCounts } from "@/hooks/useNotificationCounts";
 
 const items = [
   { title: "Overview", url: "/admin", icon: Home },
@@ -28,11 +30,16 @@ const items = [
 
 export function AdminSidebar() {
   const { open, setOpen } = useSidebar();
+  const notificationCounts = useNotificationCounts();
 
   const handleNavClick = () => {
-    if (window.innerWidth < 768) {
-      setOpen(false);
-    }
+    setOpen(false);
+  };
+
+  const getNotificationCount = (url: string) => {
+    if (url.includes("emergencies")) return notificationCounts.emergency;
+    if (url.includes("complaints")) return notificationCounts.complaint;
+    return 0;
   };
 
   return (
@@ -44,16 +51,24 @@ export function AdminSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end={item.url === "/admin"} onClick={handleNavClick}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) => {
+                const count = getNotificationCount(item.url);
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink to={item.url} end={item.url === "/admin"} onClick={handleNavClick}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                        {count > 0 && (
+                          <Badge variant="destructive" className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs">
+                            {count}
+                          </Badge>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
