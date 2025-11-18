@@ -10,6 +10,7 @@ import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { FileUpload } from "@/components/FileUpload";
+import { useNotificationCounts } from "@/hooks/useNotificationCounts";
 
 interface Complaint {
   id: string;
@@ -35,9 +36,11 @@ const Complaint = () => {
     description: "",
     file_urls: [] as string[],
   });
+  const { markAsRead } = useNotificationCounts();
 
   useEffect(() => {
     loadComplaints();
+    markAsRead("complaint");
   }, []);
 
   const loadComplaints = async () => {

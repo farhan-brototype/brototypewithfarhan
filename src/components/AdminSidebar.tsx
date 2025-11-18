@@ -30,7 +30,7 @@ const items = [
 
 export function AdminSidebar() {
   const { open, setOpen } = useSidebar();
-  const notificationCounts = useNotificationCounts();
+  const { counts: notificationCounts } = useNotificationCounts();
 
   const handleNavClick = () => {
     setOpen(false);
@@ -39,6 +39,7 @@ export function AdminSidebar() {
   const getNotificationCount = (url: string) => {
     if (url.includes("emergencies")) return notificationCounts.emergency;
     if (url.includes("complaints")) return notificationCounts.complaint;
+    if (url.includes("applications")) return notificationCounts.application;
     return 0;
   };
 

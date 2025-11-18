@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { FileUpload } from "@/components/FileUpload";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, Clock } from "lucide-react";
+import { CheckCircle, Clock, Download } from "lucide-react";
+import { useNotificationCounts } from "@/hooks/useNotificationCounts";
 
 interface Assignment {
   id: string;
@@ -17,6 +18,7 @@ interface Assignment {
   description: string;
   due_date: string;
   created_at: string;
+  file_urls: string[] | null;
 }
 
 interface Submission {
@@ -40,10 +42,12 @@ const Assignment = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { markAsRead } = useNotificationCounts();
 
   useEffect(() => {
     loadAssignments();
     loadSubmissions();
+    markAsRead("assignment");
 
     const channel = supabase
       .channel('assignment_submissions')
@@ -226,6 +230,26 @@ const Assignment = () => {
               <h4 className="font-semibold mb-2">Description</h4>
               <p className="text-muted-foreground">{selectedAssignment?.description}</p>
             </div>
+
+            {selectedAssignment?.file_urls && selectedAssignment.file_urls.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-2">Assignment Files</h4>
+                <div className="space-y-2">
+                  {selectedAssignment.file_urls.map((url, idx) => (
+                    <a
+                      key={idx}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-primary hover:underline"
+                    >
+                      <Download className="h-4 w-4" />
+                      Assignment File {idx + 1}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {selectedAssignment && submissions[selectedAssignment.id] ? (
               <div className="border-t pt-4">

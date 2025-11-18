@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
+import { useNotificationCounts } from "@/hooks/useNotificationCounts";
 
 interface Emergency {
   id: string;
@@ -17,9 +18,11 @@ interface Emergency {
 const Emergencies = () => {
   const [emergencies, setEmergencies] = useState<Emergency[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { markAsRead } = useNotificationCounts();
 
   useEffect(() => {
     fetchEmergencies();
+    markAsRead("emergency");
   }, []);
 
   const fetchEmergencies = async () => {

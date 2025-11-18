@@ -27,7 +27,7 @@ const items = [
 
 export function UserSidebar() {
   const { open, setOpen } = useSidebar();
-  const notificationCounts = useNotificationCounts();
+  const { counts: notificationCounts } = useNotificationCounts();
 
   const handleNavClick = () => {
     setOpen(false);

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
+import { useNotificationCounts } from "@/hooks/useNotificationCounts";
 
 interface Application {
   id: string;
@@ -16,9 +17,11 @@ interface Application {
 const CourseApplications = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { markAsRead } = useNotificationCounts();
 
   useEffect(() => {
     fetchApplications();
+    markAsRead("application");
   }, []);
 
   const fetchApplications = async () => {

@@ -5,6 +5,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useNotificationCounts } from "@/hooks/useNotificationCounts";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 
 interface Complaint {
   id: string;
@@ -23,9 +26,11 @@ interface Complaint {
 const Complaints = () => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { markAsRead } = useNotificationCounts();
 
   useEffect(() => {
     fetchComplaints();
+    markAsRead("complaint");
   }, []);
 
   const fetchComplaints = async () => {
@@ -127,19 +132,28 @@ const Complaints = () => {
                       </p>
                       <p className="text-sm mt-2">{complaint.description}</p>
                       {complaint.file_urls && complaint.file_urls.length > 0 && (
-                        <div className="mt-2">
-                          <p className="text-sm font-medium">Attachments:</p>
-                          {complaint.file_urls.map((url, idx) => (
-                            <a 
-                              key={idx}
-                              href={url} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="text-sm text-primary hover:underline block"
-                            >
-                              Attachment {idx + 1}
-                            </a>
-                          ))}
+                        <div className="mt-3">
+                          <p className="text-sm font-medium mb-2">Attachments:</p>
+                          <div className="space-y-1">
+                            {complaint.file_urls.map((url, idx) => (
+                              <Button
+                                key={idx}
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="w-full justify-start"
+                              >
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Download className="h-4 w-4 mr-2" />
+                                  Download Attachment {idx + 1}
+                                </a>
+                              </Button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
