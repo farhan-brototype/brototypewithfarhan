@@ -13,6 +13,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo-main.png";
 import { useNotificationCounts } from "@/hooks/useNotificationCounts";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 
 const items = [
   { title: "Overview", url: "/admin", icon: Home },
@@ -31,9 +33,13 @@ const items = [
 export function AdminSidebar() {
   const { open, setOpen } = useSidebar();
   const { counts: notificationCounts } = useNotificationCounts();
+  const isMobile = useIsMobile();
+  useRealtimeNotifications(true);
 
   const handleNavClick = () => {
-    setOpen(false);
+    if (isMobile) {
+      setOpen(false);
+    }
   };
 
   const getNotificationCount = (url: string) => {
@@ -57,7 +63,13 @@ export function AdminSidebar() {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <NavLink to={item.url} end={item.url === "/admin"} onClick={handleNavClick}>
+                      <NavLink 
+                        to={item.url} 
+                        end={item.url === "/admin"} 
+                        onClick={handleNavClick}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground"
+                        activeClassName="bg-accent text-accent-foreground font-semibold"
+                      >
                         <item.icon />
                         <span>{item.title}</span>
                         {count > 0 && (
