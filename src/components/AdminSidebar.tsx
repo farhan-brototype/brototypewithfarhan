@@ -37,7 +37,7 @@ export function AdminSidebar() {
   useRealtimeNotifications(true);
 
   const handleNavClick = () => {
-    if (isMobile) {
+    if (isMobile && open) {
       setOpen(false);
     }
   };

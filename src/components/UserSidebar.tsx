@@ -34,7 +34,7 @@ export function UserSidebar() {
   useRealtimeNotifications(false);
 
   const handleNavClick = () => {
-    if (isMobile) {
+    if (isMobile && open) {
       setOpen(false);
     }
   };
